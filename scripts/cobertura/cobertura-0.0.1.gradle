@@ -1,0 +1,60 @@
+
+apply plugin: 'cobertura'
+
+dependencies {
+  // Cobertura
+  testCompile "net.saliman:gradle-cobertura-plugin:2.2.3"
+  cobertura "net.sourceforge.cobertura:cobertura:1.9.4.1"
+}
+
+def coberturaReportFormat = 'xml'
+def sourceDir = (new File(projectDir, 'src/main/java').exists()) ?
+        'src/main/java' :
+        'main/java'
+
+test {
+  cobertura {
+    coberturaVersion = '1.9.4.1'
+    coverageSourceDirs = [sourceDir]
+    //coverageIgnoreTrivial = true        // cobertura2.0以上じゃないと使えないらしい
+    coverageFormats = [coberturaReportFormat]
+    coverageDirs = [project.sourceSets.main.output.classesDir]
+  }
+}
+
+
+
+
+task coverage(dependsOn: ['clean', 'generateCoberturaReportByAnt'])
+
+
+def coberturaReportDir = new File(project.buildDir, "cobertura-report")
+
+task generateCoberturaReportByAnt(dependsOn: 'cobertura') {
+  def dataFile = "${project.buildDir}/cobertura/cobertura.ser"
+
+  inputs.file file(dataFile)
+  outputs.dir coberturaReportDir
+
+  doLast {
+    ant {
+      taskdef(resource: 'tasks.properties',
+              classpath: configurations.cobertura.asPath)
+
+      'cobertura-report'(
+              destdir: coberturaReportDir,
+              datafile: dataFile,
+              srcdir: sourceDir,
+              format: coberturaReportFormat
+      )
+    }
+  }
+}
+
+
+sonarRunner {
+  sonarProperties {
+    property "sonar.java.coveragePlugin", "cobertura"
+    property "sonar.cobertura.reportPath", "${coberturaReportDir}/coverage.xml"
+  }
+}

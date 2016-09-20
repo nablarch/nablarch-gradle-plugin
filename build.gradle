@@ -1,0 +1,111 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'java'
+
+archivesBaseName = 'nablarch-gradle-plugin'
+
+ext {
+  repoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+  snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_6
+targetCompatibility = JavaVersion.VERSION_1_6
+
+repositories {
+  mavenLocal()
+  jcenter()
+}
+
+dependencies {
+  compile gradleApi()
+  compile localGroovy()
+  testCompile('org.spockframework:spock-core:0.7-groovy-2.0') {
+    exclude module: 'groovy-all'
+  }
+  testCompile 'cglib:cglib-nodep:3.1'
+}
+
+
+task sourcesJar(type: Jar) {
+  from sourceSets.main.allSource
+  classifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from sourceSets.main.allSource
+  classifier = 'javadoc'
+}
+
+task groovydocJar(type: Jar, dependsOn: groovydoc) {
+  classifier = 'groovydoc'
+  from 'build/docs/groovydoc'
+}
+
+artifacts {
+  archives sourcesJar, javadocJar, groovydocJar
+}
+
+apply from: file("${rootProject.projectDir}/plugin-generator.gradle")
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.13'
+}
+
+
+signing {
+    sign configurations.archives
+}
+
+signArchives.onlyIf { project.hasProperty('signing.keyId') }
+
+def getOptional(prop) {
+  project.hasProperty(prop) ? project.getProperty(prop) : ""
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: repoUrl) {
+                authentication(userName: getOptional('nablarchRepoUsername'), password: getOptional('nablarchRepoPassword'))
+            }
+
+            snapshotRepository(url: snapshotRepoUrl) {
+                authentication(userName: getOptional('nablarchRepoUsername'), password: getOptional('nablarchRepoPassword'))
+            }
+
+            pom.project {
+                name project.name 
+                    packaging 'jar'
+                    description 'Nablarch Framework.'
+                    url 'https://github.com/nablarch'
+
+                    scm {
+                        connection "scm:git:git://github.com/nablarch/${project.name}.git"
+                            developerConnection "scm:git:ssh://github.com/nablarch/${project.name}.git"
+                            url "https://github.com/nablarch/${project.name}/tree/master"
+                    }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'nablarch'
+                        name 'Nablarch'
+                        email 'nablarch@tis.co.jp'
+                        organization='Nablarch'
+                        organizationUrl 'https://github.com/nablarch'
+                    }
+                }
+            }
+        }
+    }
+}

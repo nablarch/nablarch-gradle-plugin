@@ -1,0 +1,58 @@
+import nablarch.dev.NablarchPublishedApiTask
+
+description 'Automated acceptance test'
+
+buildscript {
+  repositories {
+    mavenLocal()
+    maven { url "${developLibUrl}" }
+    jcenter()
+  }
+  dependencies {
+    classpath "com.nablarch.dev:nablarch-gradle-plugin:$version"
+    classpath gradleApi()
+  }
+}
+
+apply plugin: 'com.nablarch.dev.nablarch-build'
+apply plugin: 'com.nablarch.dev.nablarch-maven-deploy'
+apply plugin: 'com.nablarch.dev.nablarch-sonarqube'
+apply plugin: 'com.nablarch.dev.nablarch-published-api'
+
+dependencies {
+  compile 'struts:struts:1.2.9'
+  runtime 'mysql:mysql-connector-java:5.1.34'
+}
+
+
+task testNablarchMavenDeployPlugin << {
+  assert plugins.hasPlugin(Class.forName('nablarch.dev.NablarchMavenDeployPlugin'))
+}
+
+task testNablarchSonarQubePlugin << {
+  assert plugins.hasPlugin(Class.forName('nablarch.dev.NablarchSonarQubePlugin'))
+  assert !project.getTasksByName('sonarRunner', false).isEmpty()
+  assert getSonarPropsOf(project)['sonar.sourceEncoding'] == project.encoding
+
+}
+
+task testJarBaseName(dependsOn: ['clean','jar']) {
+  doLast() {
+    assert project.projectName == 'hogehoge'
+    assert project.jar.baseName == 'hogehoge'
+    assert new File("${project.buildDir}/libs/hogehoge-${project.version}.jar").exists()
+  }
+}
+
+
+publishedApi {
+  apiName = "HogeHoge"
+  roles = ['architect', 'programmer']
+}
+
+
+
+def getSonarPropsOf(Project pj) {
+  def sonarRunnerTask = pj.getTasksByName('sonarRunner', false).first()
+  return sonarRunnerTask.properties.sonarProperties
+}
