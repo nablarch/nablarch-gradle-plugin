@@ -4,6 +4,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
+import org.apache.tools.ant.taskdefs.condition.Os
 
 /**
  * Nablarchのビルドを行うためのプラグイン。
@@ -68,6 +69,24 @@ class NablarchBuildPlugin implements Plugin<Project> {
       // テストソースのエンコーディング設定
       compileTestJava {
         options.encoding = project.encoding
+      }
+
+      // gitのハッシュ値を取得
+      def revisionHash = ""
+
+      if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+          revisionHash = ["cmd", "/c", "cd ${project.projectDir} & git rev-parse HEAD"].execute().in.text.trim()
+      } else {
+          revisionHash = ["sh", "-c", "cd ${project.projectDir} ; git rev-parse HEAD"].execute().in.text.trim()
+      }
+
+      jar.doFirst {
+        jar {
+            manifest {
+                attributes("targetCompatibility": project.targetCompatibility,
+                          "git-hash": revisionHash)
+            }
+        }
       }
     }
   }
