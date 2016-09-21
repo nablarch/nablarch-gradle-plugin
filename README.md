@@ -1,26 +1,8 @@
 Nablarch Gradle Plugin
 ======================
 
-Nablarch開発用のGradleプラグインです。
-
-## 動機
-
-Nablarchの各モジュールは、モジュールの独立性を高めるため、
-マルチモジュール構成ではなく、単体のモジュールの集まりとなっています。
-
-マルチモジュール構成であれば、親モジュールに共通設定を記述できるのですが
-それができないので、プラグインによって共通化を図ります。
-
-### 代替案
-以下のようにapplyでHTTP経由で共通のスクリプトを読み込むこともできます。
-
-```groovy
-apply from: 'http://path/to/script.gradle
-```
-
-しかし、この方法だと、モジュールのバージョンと共通スクリプトのバージョンを
-合わせるのが難しくなる（わかりにくくなる）問題があります。
-（プラグインには必ずバージョン番号が付与されるので大丈夫）
+Nablarch開発用のGradleプラグインです。  
+Nablarch Frameworkの各モジュールをビルドする際に必要となる共通処理・設定を行います。
 
 ## 前準備
 
@@ -31,7 +13,7 @@ apply from: 'http://path/to/script.gradle
 buildscript {
   repositories {
     mavenLocal()
-    maven { url "${nablarchRepoReferenceUrl}/internal" }
+    maven { url "${nablarchRepoReferenceUrl}/content/groups/staging" }
     jcenter()
   }
   dependencies {
@@ -43,7 +25,7 @@ buildscript {
 ### gradle.properties
 
 ```
-nablarchRepoReferenceUrl=http://example.com/artifactory
+nablarchRepoReferenceUrl=https://oss.sonatype.org
 nablarchGradlePluginVersion=0.0.1-SNAPSHOT
 ```
 
@@ -57,7 +39,7 @@ nablarchGradlePluginVersion=0.0.1-SNAPSHOT
 * providedスコープの提供
 * テスト実行時のヒープ設定
 * カバレッジの有効化
-* 参照先リポジトリの設定（Artifactory）
+* 参照先リポジトリの設定(OSSRHステージング)
 * マニフェストの設定
 
 以下の設定をbuild.gradleに追加します。
@@ -69,7 +51,7 @@ apply plugin: 'com.nablarch.dev.nablarch-build'
 以下の設定をgradle.propertiesに追加します。
 
 ```
-nablarchRepoReferenceUrl=http://example.com/artifactory
+nablarchRepoReferenceUrl=https://oss.sonatype.org
 ```
 
 #### Javaビルド設定
@@ -92,7 +74,7 @@ dependencies {
 IDE(Eclipse, IntelliJ)への連携も同時に行われます。
 
 
-#### 参照先リポジトリの設定（Artifactory）
+#### 参照先リポジトリの設定
 
 以下のリポジトリが設定されます。
 
@@ -104,13 +86,13 @@ IDE(Eclipse, IntelliJ)への連携も同時に行われます。
 
 バージョン番号にSNAPSHOTが付与されている場合、参照先リポジトリに以下が追加されます。
 
-``maven { url "${nablarchRepoReferenceUrl}/internal"}``
+``maven { url "${nablarchRepoReferenceUrl}/content/groups/public"}``
 
 ##### SNAPSHOT以外のバージョンの参照
 
 デフォルトでは、参照先リポジトリに以下が追加されます。
 
-``maven { url "${nablarchRepoReferenceUrl}/staging"}``
+``maven { url "${nablarchRepoReferenceUrl}/content/groups/staging"}``
 
 プロパティ``nablarchRepoReferenceName``を明示的に設定している場合、
 参照先リポジトリには上記の代わりに、以下が追加されます。
@@ -126,14 +108,17 @@ IDE(Eclipse, IntelliJ)への連携も同時に行われます。
 | Build-Jdk              | System.properties['java.version'] + ' (' + System.properties['java.vendor'] + ')'  |
 | Implementation-Title   | project.name                                                                       |
 | Implementation-Version | project.version                                                                    |
+| targetCompatibility    | project.targetCompatibility                                                        |
+| git-hash               | プロジェクトのgitハッシュ値                                                        |
 ```
 
 ### Nablarch Maven Deploy プラグイン
 
 このプラグインは、通常のデプロイによくある共通設定をします。
 * アーティファクトの定義
-* デプロイ先URLの指定(Artifactory)
+* デプロイ先URLの指定（OSSRH）
 * Gradle上の依存関係で、compileスコープで定義されたものは、pom.xmlにもcompileスコープで出力
+* GPG署名ファイルの生成（OSSRHへのデプロイのため)
 
 
 以下の設定をbuild.gradleに追加します。
@@ -146,7 +131,7 @@ apply plugin: 'com.nablarch.dev.nablarch-maven-deploy'
 以下の設定をgradle.propertiesに追加します。
 
 ```
-nablarchRepoDeployUrl=http://example.com/artifactory
+nablarchRepoDeployUrl=https://oss.sonatype.org
 nablarchRepoUsername=username
 nablarchRepoPassword=secret
 signing.keyId=A985D5C9
@@ -167,12 +152,12 @@ gradle clean uploadArchives -PnablarchRepoUsername=username -PnablarchRepoPasswo
 
 バージョン番号にSNAPSHOTが付与されている場合、デプロイ先は以下のようになります。
 
-``${nablarchRepoDeployUrl}/nablarch-snapshot``
+``${nablarchRepoDeployUrl}/content/groups/public``
 
 #### SNAPSHOTS以外のデプロイ
 
 デフォルトでは、デプロイ先は以下のようになります。
-``${nablarchRepoDeployUrl}/nablarch-staging``
+``${nablarchRepoDeployUrl}/content/groups/staging``
 
 
 #### プロジェクトプロパティ
@@ -190,7 +175,8 @@ gradle clean uploadArchives -PnablarchRepoUsername=username -PnablarchRepoPasswo
 gradle -PnablarchRepoName=nablarch-internal ^
        -PnablarchRepoUsername=username ^
        -PnablarchRepoPassword=secret ^
-       publishMavenPublicationToMavenRepository
+       ...
+       uploadArchives
 ```
 
 #### プラグインで設定されるマニフェスト属性
@@ -320,6 +306,19 @@ publishedApi {
 * 公開API一覧ファイルとして``NablarchTFWApiForArchitect.config``が出力される
 * @Publishedが付与されたAPIが出力対象となる
 * 公開API一覧ファイルとして``NablarchTFWApiForProgrammer.config``が出力される
+
+### Nablarch Versionプラグイン
+ 
+このプラグインはgitリポジトリ上のプロパティファイル(.properties)を読み込み、key-value形式で値を保持します。  
+Nablarchの各モジュールバージョンをプロパティファイルに集約し、各プロジェクトではそのバージョン情報を変数で参照することができます。  
+ 
+読み込むプロパティファイルの解決方法を、プラグインを利用するプロジェクトのブランチがfeature-testであった場合を例に説明します。
+ 
+  1. 現在のプロジェクトのgitブランチ名を取得する。 ==> feature-test
+  2. 取得したgitブランチ名に「.properties」をつける。 ==> feature-test.properites
+  3. [nablarch-module-version](https://github.com/nablarch/nablarch-module-version)の**master**ブランチ直下にあるfeature-test.properitesを読み込む。
+  * もし読み込みに失敗した場合は、[nablarch-module-version](https://github.com/nablarch/nablarch-module-version)の**master**ブランチ直下のdevelop.propertiesを読み込むようにする。
+
 
 ## プラグイン自身のビルド
 
