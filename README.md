@@ -118,7 +118,7 @@ IDE(Eclipse, IntelliJ)への連携も同時に行われます。
 * アーティファクトの定義
 * デプロイ先URLの指定（OSSRH）
 * Gradle上の依存関係で、compileスコープで定義されたものは、pom.xmlにもcompileスコープで出力
-* pgp署名ファイルの生成（OSSRHへのデプロイのため)
+* GPG署名ファイルの生成（OSSRHへのデプロイのため)
 
 
 以下の設定をbuild.gradleに追加します。
@@ -328,9 +328,9 @@ Nablarchの各モジュールバージョンをプロパティファイルに集
 
 | プロパティ名                    | 設定値の内容                                |
 |:--------------------------------|:--------------------------------------------|
-| signing.keyId                   | PGPキーペアのキーID                         |
-| signing.password                | PGP秘密キーのパスフレーズ                   |
-| signing.secretKeyRingFile       | PGP秘密キーリングファイル                   |
+| signing.keyId                   | GPGキーペアのキーID                         |
+| signing.password                | GPG秘密キーのパスフレーズ                   |
+| signing.secretKeyRingFile       | GPG秘密キーリングファイル                   |
 | nablarchRepoUsername            | リポジトリデプロイユーザ名                  |
 | nablarchRepoPassword            | リポジトリデプロイパスワード                |
 
