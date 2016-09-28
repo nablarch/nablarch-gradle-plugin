@@ -58,6 +58,11 @@ class NablarchMavenDeployPlugin implements Plugin<Project> {
         classifier = 'javadoc'
         from javadoc
       }
+      
+      // javaDoc生成時の文字コードを指定
+      javadoc {
+        options.encoding = 'UTF-8'
+      }
 
       // Artifact定義
       artifacts {
