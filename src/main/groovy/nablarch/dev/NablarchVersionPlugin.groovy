@@ -18,13 +18,19 @@ class NablarchVersionPlugin implements Plugin<Project> {
         Project.mixin(ProjectMixin)
 
         // 現在のブランチから読み込むプロパティファイルを取得
-        def branch = "git rev-parse --abbrev-ref HEAD".execute().text.replaceAll(/(\r|\n)/, "")
+        def branch
+        try {
+            branch = "git rev-parse --abbrev-ref HEAD".execute().text.replaceAll(/(\r|\n)/, "")
 
-        // Jenkins上でビルドする場合、ブランチ名が取得できないのでディレクトリからブランチを判定する。
-        if (branch.equals("HEAD")) {
-            def pwd = "pwd".execute().text.replaceAll(/(\r|\n)/, "")
-            def dirname = ("dirname " + pwd).execute().text.replaceAll(/(\r|\n)/, "")
-            branch = ("basename " + dirname).execute().text.replaceAll(/(\r|\n)/, "")
+            // Jenkins上でビルドする場合、ブランチ名が取得できないのでディレクトリからブランチを判定する。
+            if (branch.equals("HEAD")) {
+                def pwd = "pwd".execute().text.replaceAll(/(\r|\n)/, "")
+                def dirname = ("dirname " + pwd).execute().text.replaceAll(/(\r|\n)/, "")
+                branch = ("basename " + dirname).execute().text.replaceAll(/(\r|\n)/, "")
+            }
+        } catch (Exception e) {
+          // ブランチ名が取れない場合はdevelopを使用する
+          branch = "develop"
         }
 
         // プロパティファイルのロード
