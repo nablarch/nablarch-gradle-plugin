@@ -154,10 +154,6 @@ class NablarchBuildPlugin implements Plugin<Project> {
       dependencies {
         testRuntime 'com.h2database:h2:1.4.191'
         testCompile 'com.nablarch.dev:nablarch-test-support:+'
-        testCompile('junit:junit:4.12') {
-          exclude module: 'hamcrest-core'
-        }
-        testCompile 'org.hamcrest:hamcrest-all:1.3'
       }
     }
   }
