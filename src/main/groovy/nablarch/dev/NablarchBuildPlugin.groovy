@@ -207,8 +207,8 @@ class NablarchBuildPlugin implements Plugin<Project> {
           throw new InvalidUserDataException('テストサポート対象外のデータベースが指定されました。 ')
         } else {
           def outputDir = project.sourceSets.test.output.resourcesDir
-          copyFile(jarFile, config, "${outputDir}/db.config")
-          copyFile(jarFile, xml, "${outputDir}/datasource.xml")
+          copyFileFroJarFile(jarFile, config, "${outputDir}/db.config")
+          copyFileFroJarFile(jarFile, xml, "${outputDir}/datasource.xml")
         }
       } finally {
         jarFile.close()
