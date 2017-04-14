@@ -163,7 +163,7 @@ class NablarchBuildPlugin implements Plugin<Project> {
 
     project.with {
       dependencies {
-        testCompile 'com.nablarch.dev:nablarch-test-support:+'
+        testCompile 'com.nablarch.dev:nablarch-test-support:0.0.7'
       }
     }
     addJdbcLibrary(project)
