@@ -149,6 +149,13 @@ class NablarchBuildPlugin implements Plugin<Project> {
                 '-Duser.region=JP'
       }
     }
+    
+    project.with {
+      dependencies {
+        testRuntime 'com.h2database:h2:1.4.191'
+        testCompile 'com.nablarch.dev:nablarch-test-support:+'
+      }
+    }
   }
 
   /**
