@@ -258,7 +258,7 @@ class NablarchBuildPlugin implements Plugin<Project> {
    * @return 参照リポジトリ名
    */
   private static String resolveRepoName(Project project) {
-    if (project.snapshotVersion) {
+    if (project.isSnapshotVersion()) {
       return SNAPSHOT_REPO_NAME
     }
     return project.getOrElse('nablarchRepoReferenceName', STAGING_REPO_NAME)
