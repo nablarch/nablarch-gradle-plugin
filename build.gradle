@@ -67,7 +67,13 @@ def getOptional(prop) {
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            beforeDeployment {
+                MavenDeployment deployment ->
+                  if (project.hasProperty('signing.keyId')) {
+                      signing.signPom(deployment)
+                  }
+            }
 
             repository(url: repoUrl) {
                 authentication(userName: getOptional('nablarchRepoUsername'), password: getOptional('nablarchRepoPassword'))

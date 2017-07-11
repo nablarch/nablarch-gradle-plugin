@@ -141,7 +141,12 @@ class NablarchMavenDeployPlugin implements Plugin<Project> {
           uploadArchives {
               repositories {
                   mavenDeployer {
-                      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                      beforeDeployment {
+                          MavenDeployment deployment ->
+                            if (project.hasProperty('signing.keyId')) {
+                              signing.signPom(deployment)
+                            }
+                      }
 
                       repository(url: resolveRepoUrl(project)) {
                           authentication(userName: project.getOptional('nablarchRepoUsername'), password: project.getOptional('nablarchRepoPassword'))
