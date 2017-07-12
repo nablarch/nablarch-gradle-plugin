@@ -6,8 +6,8 @@ apply plugin: 'java'
 archivesBaseName = 'nablarch-gradle-plugin'
 
 ext {
-  repoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-  snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+  repoUrl = "${nablarchRepoDeployUrl}/${nablarchRepoName}"
+  snapshotRepoUrl = "${nablarchRepoDeployUrl}/${nablarchSnapshotRepoName}"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_6
