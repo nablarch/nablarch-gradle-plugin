@@ -132,6 +132,14 @@ class NablarchMavenDeployPlugin implements Plugin<Project> {
               javadoc.classpath += project.configurations.provided
           }
 
+          configurations {
+              deployerJars
+          }
+          
+          dependencies {
+              deployerJars 'org.apache.maven.wagon:wagon-webdav-jackrabbit:2.9'
+          }
+
           signing {
               sign configurations.archives
           }
@@ -141,6 +149,9 @@ class NablarchMavenDeployPlugin implements Plugin<Project> {
           uploadArchives {
               repositories {
                   mavenDeployer {
+           
+                      configuration = configurations.deployerJars
+
                       beforeDeployment {
                           MavenDeployment deployment ->
                             if (project.hasProperty('signing.keyId')) {

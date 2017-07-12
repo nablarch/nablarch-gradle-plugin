@@ -53,6 +53,13 @@ task wrapper(type: Wrapper) {
   gradleVersion = '2.13'
 }
 
+configurations {
+    deployerJars
+}
+
+dependencies {
+    deployerJars 'org.apache.maven.wagon:wagon-webdav-jackrabbit:2.9'
+}
 
 signing {
     sign configurations.archives
@@ -67,6 +74,8 @@ def getOptional(prop) {
 uploadArchives {
     repositories {
         mavenDeployer {
+           
+            configuration = configurations.deployerJars
 
             beforeDeployment {
                 MavenDeployment deployment ->
