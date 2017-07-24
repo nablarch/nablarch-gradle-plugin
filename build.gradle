@@ -6,8 +6,8 @@ apply plugin: 'java'
 archivesBaseName = 'nablarch-gradle-plugin'
 
 ext {
-  repoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-  snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+  repoUrl = "${nablarchRepoDeployUrl}/${nablarchRepoName}"
+  snapshotRepoUrl = "${nablarchRepoDeployUrl}/${nablarchSnapshotRepoName}"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_6
@@ -53,6 +53,13 @@ task wrapper(type: Wrapper) {
   gradleVersion = '2.13'
 }
 
+configurations {
+    deployerJars
+}
+
+dependencies {
+    deployerJars 'org.apache.maven.wagon:wagon-webdav-jackrabbit:2.9'
+}
 
 signing {
     sign configurations.archives
@@ -67,7 +74,15 @@ def getOptional(prop) {
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+           
+            configuration = configurations.deployerJars
+
+            beforeDeployment {
+                MavenDeployment deployment ->
+                  if (project.hasProperty('signing.keyId')) {
+                      signing.signPom(deployment)
+                  }
+            }
 
             repository(url: repoUrl) {
                 authentication(userName: getOptional('nablarchRepoUsername'), password: getOptional('nablarchRepoPassword'))
