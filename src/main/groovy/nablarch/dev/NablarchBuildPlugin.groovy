@@ -235,7 +235,6 @@ class NablarchBuildPlugin implements Plugin<Project> {
       repositories {
         mavenLocal()
         maven { url resolveRepoUrl(project)}
-        jcenter()
       }
     }
   }
