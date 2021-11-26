@@ -6,7 +6,7 @@ buildscript {
   repositories {
     mavenLocal()
     maven { url "${developLibUrl}" }
-    jcenter()
+    mavenCentral()
   }
   dependencies {
     classpath "com.nablarch.dev:nablarch-gradle-plugin:$version"
