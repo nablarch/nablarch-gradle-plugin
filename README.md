@@ -14,7 +14,7 @@ buildscript {
   repositories {
     mavenLocal()
     maven { url "${nablarchRepoReferenceUrl}/content/groups/staging" }
-    jcenter()
+    mavenCentral()
   }
   dependencies {
     classpath "com.nablarch.dev:nablarch-gradle-plugin:${nablarchGradlePluginVersion}"
@@ -80,7 +80,7 @@ IDE(Eclipse, IntelliJ)への連携も同時に行われます。
 
 * Mavenローカルリポジトリ($HOME/.m2/repository)
 * NablarchのMavenリポジトリ
-* jcenter
+* mavenCentral
 
 ##### SNAPSHOTバージョンの参照
 
