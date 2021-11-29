@@ -18,12 +18,16 @@ apply plugin: 'com.nablarch.dev.nablarch-build'
 apply plugin: 'com.nablarch.dev.nablarch-maven-deploy'
 apply plugin: 'com.nablarch.dev.nablarch-sonarqube'
 apply plugin: 'com.nablarch.dev.nablarch-published-api'
+apply plugin: 'com.nablarch.dev.nablarch-version'
 
 dependencies {
   compile 'struts:struts:1.2.9'
   runtime 'mysql:mysql-connector-java:5.1.34'
 }
 
+task testNablarchBuildPlugin << {
+  assert plugins.hasPlugin(Class.forName('nablarch.dev.NablarchBuildPlugin'))
+}
 
 task testNablarchMavenDeployPlugin << {
   assert plugins.hasPlugin(Class.forName('nablarch.dev.NablarchMavenDeployPlugin'))
@@ -35,6 +39,15 @@ task testNablarchSonarQubePlugin << {
   assert getSonarPropsOf(project)['sonar.sourceEncoding'] == project.encoding
 
 }
+
+task testNablarchPublishedApiPlugin << {
+  assert plugins.hasPlugin(Class.forName('nablarch.dev.NablarchPublishedApiPlugin'))
+}
+
+task testNablarchVersionApiPlugin << {
+  assert plugins.hasPlugin(Class.forName('nablarch.dev.NablarchVersionPlugin'))
+}
+
 
 task testJarBaseName(dependsOn: ['clean','jar']) {
   doLast() {
