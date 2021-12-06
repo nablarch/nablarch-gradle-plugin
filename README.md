@@ -80,7 +80,7 @@ IDE(Eclipse, IntelliJ)への連携も同時に行われます。
 
 * Mavenローカルリポジトリ($HOME/.m2/repository)
 * NablarchのMavenリポジトリ
-* mavenCentral
+* Mavenセントラルリポジトリ(http://repo1.maven.org/maven2/)
 
 ##### SNAPSHOTバージョンの参照
 
