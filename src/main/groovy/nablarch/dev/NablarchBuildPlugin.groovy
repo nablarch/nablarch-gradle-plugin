@@ -1,10 +1,13 @@
 package nablarch.dev
 
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.JavaExec
 import org.apache.tools.ant.taskdefs.condition.Os
+
+import java.util.jar.JarFile
+import java.util.zip.ZipEntry
 
 /**
  * Nablarchのビルドを行うためのプラグイン。
@@ -26,6 +29,9 @@ class NablarchBuildPlugin implements Plugin<Project> {
 
   /** Mavenリポジトリの参照URL */
   static final String NABLARCH_REPO_REFERENCE_URL = 'nablarchRepoReferenceUrl'
+
+  public static final String TARGET_DB_KEY = 'target.db'
+
 
   /** {@inheritDoc} */
   @Override
@@ -138,24 +144,86 @@ class NablarchBuildPlugin implements Plugin<Project> {
     project.with {
       /** テスト設定 */
       test {
+        doFirst {
+          if (project.hasProperty(TARGET_DB_KEY)) {
+            changeDatabase(project)
+          }
+        }
         maxHeapSize = '1024m'
         minHeapSize = '512m'
 
         // デフォルトエンコーディングを強制的に変更(HereIs対応)
         jvmArgs '-Dfile.encoding=utf-8',
-                '-da',
-                '-XX:-UseSplitVerifier',
-                '-Duser.language=ja',
-                '-Duser.region=JP'
+            '-da',
+            '-XX:-UseSplitVerifier',
+            '-Duser.language=ja',
+            '-Duser.region=JP'
       }
     }
-    
+
     project.with {
       dependencies {
-        testRuntime 'com.h2database:h2:1.4.191'
-        testCompile 'com.nablarch.dev:nablarch-test-support:+'
+        testCompile 'com.nablarch.dev:nablarch-test-support:0.0.8'
       }
     }
+    addJdbcLibrary(project)
+  }
+
+  /**
+   * テストで使うJDBCのライブラリを依存に追加する
+   */
+  private void addJdbcLibrary(final Project project) {
+    project.with {
+      dependencies {
+        if (!project.hasProperty(TARGET_DB_KEY) || project.property(TARGET_DB_KEY) == 'h2') {
+          testRuntime 'com.h2database:h2:1.4.191'
+        } else if (project.property(TARGET_DB_KEY) == 'oracle') {
+          testRuntime 'com.oracle:ojdbc6:11.2.0.2.0'
+        } else if (project.property(TARGET_DB_KEY) == 'postgre') {
+          testRuntime 'org.postgresql:postgresql:42.0.0.jre6'
+        } else if (project.property(TARGET_DB_KEY) == 'db2') {
+          testRuntime 'com.ibm:db2jcc4:9.7.200.358'
+        } else if (project.property(TARGET_DB_KEY) == 'sqlserver') {
+          testRuntime 'com.microsoft:sqljdbc4:4.0'
+        }
+      }
+    }
+  }
+
+  /**
+   * テストで使用するデータベースの設定を実行時に切り替える処理
+   */
+  private void changeDatabase(Project project) {
+    String targetDb = project.property(TARGET_DB_KEY)
+    final File nablarchTestSupport = project.configurations.testRuntime.
+        find { it.name.contains('nablarch-test-support') } as File
+    if (nablarchTestSupport != null) {
+      final JarFile jarFile = new JarFile(nablarchTestSupport)
+      try {
+        def config = jarFile.getEntry("db/${targetDb}-db.config")
+        def xml = jarFile.getEntry("db/${targetDb}-datasource.xml")
+        if (config == null || xml == null) {
+          println "テストサポート対象外のデータベースが指定されました。 "
+          throw new InvalidUserDataException('テストサポート対象外のデータベースが指定されました。 ')
+        } else {
+          def outputDir = project.sourceSets.test.output.resourcesDir
+          copyFileFroJarFile(jarFile, config, "${outputDir}/db.config")
+          copyFileFroJarFile(jarFile, xml, "${outputDir}/datasource.xml")
+        }
+      } finally {
+        jarFile.close()
+      }
+    } else {
+      throw new InvalidUserDataException('テストサポート対象外のデータベースが指定されました。 ')
+    }
+  }
+
+  /**
+   * jarファイル内のエントリーをコピーする。
+   */
+  private void copyFileFroJarFile(JarFile jarFile, ZipEntry zipEntry, String outputFileName) {
+    InputStream stream = jarFile.getInputStream(zipEntry)
+    new File(outputFileName).write(stream.newReader("utf-8").text, "utf-8")
   }
 
   /**
@@ -167,7 +235,7 @@ class NablarchBuildPlugin implements Plugin<Project> {
       repositories {
         mavenLocal()
         maven { url resolveRepoUrl(project)}
-        jcenter()
+        mavenCentral()
       }
     }
   }
@@ -190,7 +258,7 @@ class NablarchBuildPlugin implements Plugin<Project> {
    * @return 参照リポジトリ名
    */
   private static String resolveRepoName(Project project) {
-    if (project.snapshotVersion) {
+    if (project.isSnapshotVersion()) {
       return SNAPSHOT_REPO_NAME
     }
     return project.getOrElse('nablarchRepoReferenceName', STAGING_REPO_NAME)
